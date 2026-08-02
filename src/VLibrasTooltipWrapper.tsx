@@ -1,0 +1,46 @@
+import { Children, useCallback, useRef, type ReactNode, type RefObject } from 'react';
+import {
+  Pressable,
+  type GestureResponderEvent,
+  type PressableProps,
+  type View,
+} from 'react-native';
+import { useVLibras } from './VLibrasProvider';
+
+interface TooltipWrapperProps extends Omit<PressableProps, 'children'> {
+  children: ReactNode;
+  content: ReactNode;
+}
+
+export function VLibrasTooltipWrapper({
+  children,
+  content,
+  onPress,
+  ...rest
+}: TooltipWrapperProps) {
+  const ref = useRef<View>(null);
+  const { status: vLibrasStatus, show } = useVLibras();
+  const translationEnabled = vLibrasStatus === 'active';
+
+  const handlePress = useCallback(
+    (e: GestureResponderEvent) => {
+      console.log('TooltipWrapper', translationEnabled, ref.current);
+      if (translationEnabled && ref.current && onPress) {
+        show(ref as RefObject<View>, () => { onPress(e) });
+      }
+    },
+    [translationEnabled, show, content, onPress]
+  );
+
+  const child = Children.only(children);
+
+  if (!translationEnabled) {
+    return <>{children}</>;
+  }
+
+  return (
+    <Pressable ref={ref} onPress={handlePress} {...rest}>
+      {child}
+    </Pressable>
+  );
+}
