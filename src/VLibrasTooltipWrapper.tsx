@@ -1,4 +1,10 @@
-import { Children, useCallback, useRef, type ReactNode, type RefObject } from 'react';
+import {
+  Children,
+  useCallback,
+  useRef,
+  type ReactNode,
+  type RefObject,
+} from 'react';
 import {
   Pressable,
   type GestureResponderEvent,
@@ -14,7 +20,6 @@ interface TooltipWrapperProps extends Omit<PressableProps, 'children'> {
 
 export function VLibrasTooltipWrapper({
   children,
-  content,
   onPress,
   ...rest
 }: TooltipWrapperProps) {
@@ -24,12 +29,13 @@ export function VLibrasTooltipWrapper({
 
   const handlePress = useCallback(
     (e: GestureResponderEvent) => {
-      console.log('TooltipWrapper', translationEnabled, ref.current);
       if (translationEnabled && ref.current && onPress) {
-        show(ref as RefObject<View>, () => { onPress(e) });
+        show(ref as RefObject<View>, () => {
+          onPress(e);
+        });
       }
     },
-    [translationEnabled, show, content, onPress]
+    [translationEnabled, show, onPress]
   );
 
   const child = Children.only(children);

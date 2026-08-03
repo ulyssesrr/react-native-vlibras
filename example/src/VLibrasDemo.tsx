@@ -1,6 +1,10 @@
 import { View, StyleSheet, Button, Text, Alert } from 'react-native';
 
-import { useVLibras, useVLibrasTextWrapper, useVLibrasTouchableWrapper, VLibrasTooltipWrapper } from 'react-native-vlibras';
+import {
+  useVLibras,
+  useVLibrasTextWrapper,
+  VLibrasTooltipWrapper,
+} from 'react-native-vlibras';
 import { VLibrasButtonWrapper } from '../../src/VLibrasWrapper';
 
 export default function VLibrasDemo() {
@@ -8,7 +12,7 @@ export default function VLibrasDemo() {
 
   const onPress = () => {
     Alert.alert('PRESSED!');
-  }
+  };
 
   return (
     <View style={styles.container}>
@@ -20,8 +24,10 @@ export default function VLibrasDemo() {
       <VLibrasTooltipWrapper content={<Text>Content</Text>}>
         <Text style={styles.teste}>Teste 1 2 3</Text>
       </VLibrasTooltipWrapper>
-      <Text style={styles.teste} {...useVLibrasTextWrapper({onPress})}>Meus Benefícios</Text>
-      <VLibrasButtonWrapper title='Meus Benefícios' onPress={onPress} />
+      <Text style={styles.teste} {...useVLibrasTextWrapper({ onPress })}>
+        Meus Benefícios
+      </Text>
+      <VLibrasButtonWrapper title="Meus Benefícios" onPress={onPress} />
     </View>
   );
 }

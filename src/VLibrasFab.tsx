@@ -72,7 +72,12 @@ export function VLibrasFab({
   console.log('style', style);
   return (
     <Pressable
-      style={[resolveContainerStyle(size, anchor, alignment), { borderRadius }, styles.fab, { ...style }]}
+      style={[
+        resolveContainerStyle(size, anchor, alignment),
+        { borderRadius },
+        styles.fab,
+        { ...style },
+      ]}
       onPress={onPress}
     >
       <Image
@@ -95,6 +100,6 @@ const styles = StyleSheet.create({
   },
   image: {
     width: '100%',
-    height: '100%'
-  }
+    height: '100%',
+  },
 });

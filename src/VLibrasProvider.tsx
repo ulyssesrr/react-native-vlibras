@@ -36,7 +36,10 @@ interface VLibrasState {
 interface VLibrasContextValue {
   status: VLibrasStatus;
   setTranslationEnabled: Dispatch<SetStateAction<boolean>>;
-  show: (anchorRef: RefObject<NativeMethods | null>, onPress: () => void) => void;
+  show: (
+    anchorRef: RefObject<NativeMethods | null>,
+    onPress: () => void
+  ) => void;
   hide: () => void;
   translate: (text: string) => boolean;
 }
@@ -100,27 +103,26 @@ export function VLibrasProvider({ children }: PropsWithChildren) {
     if (!translationEnabled) {
       hide();
     }
-  }, [translationEnabled]);
+  }, [hide, translationEnabled]);
 
   const handleTap = (x: number, y: number) => {
     if (state) {
-
       const inside =
         x >= state.anchor.x &&
         x <= state.anchor.x + state.anchor.width &&
         y >= state.anchor.y &&
         y <= state.anchor.y + state.anchor.height;
 
-        if (!inside) {
-          hide();
-        }
+      if (!inside) {
+        hide();
+      }
     }
-  }
+  };
 
   const singleTap = useTapGesture({
     onFinalize: (event) => {
       runOnJS(handleTap)(event.x, event.y);
-    }
+    },
   });
 
   const translate = useCallback(
@@ -148,9 +150,7 @@ export function VLibrasProvider({ children }: PropsWithChildren) {
 
   return (
     <VLibrasContext.Provider value={contextValue}>
-      <GestureDetector gesture={singleTap}>
-        {children}
-      </GestureDetector>
+      <GestureDetector gesture={singleTap}>{children}</GestureDetector>
       <VLibrasTooltipPortal state={state} />
       {!translationEnabled && (
         <VLibrasFab
