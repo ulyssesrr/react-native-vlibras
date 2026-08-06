@@ -5,7 +5,7 @@ import Animated, {
   withSpring,
   useAnimatedStyle,
 } from 'react-native-reanimated';
-import { GestureDetector, usePanGesture } from 'react-native-gesture-handler';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { useWindowDimensions, type ViewProps } from 'react-native';
 
 interface DraggableViewProps extends ViewProps {
@@ -39,13 +39,20 @@ export const VLibrasDraggableView = ({
 
   const x = useSharedValue(initialX);
   const y = useSharedValue(initialY);
+  const prevTranslateX = useSharedValue(x.value);
+  const prevTranslateY = useSharedValue(y.value);
 
-  const gestureHandler = usePanGesture({
-    onUpdate: (e) => {
-      x.value = clamp(x.value + e.changeX, minWidth, maxWidth);
-      y.value = clamp(y.value + e.changeY, minHeight, maxHeight);
-    },
-    onDeactivate: () => {
+  const gestureHandler = Gesture.Pan()
+    .onUpdate((e) => {
+      const changeX = e.translationX - prevTranslateX.value;
+      prevTranslateX.value = e.translationX;
+      const changeY = e.translationY - prevTranslateY.value;
+      prevTranslateY.value = e.translationY;
+
+      x.value = clamp(x.value + changeX, minWidth, maxWidth);
+      y.value = clamp(y.value + changeY, minHeight, maxHeight);
+    })
+    .onEnd(() => {
       if (y.value < minHeight) {
         y.value = withSpring(minHeight);
       } else if (y.value > maxHeight) {
@@ -57,8 +64,9 @@ export const VLibrasDraggableView = ({
       } else if (x.value > maxWidth) {
         x.value = withSpring(maxWidth);
       }
-    },
-  });
+      prevTranslateX.value = 0;
+      prevTranslateY.value = 0;
+    });
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
@@ -67,7 +75,7 @@ export const VLibrasDraggableView = ({
   }, [x.value, y.value]);
 
   return (
-    <Animated.View style={[animatedStyle, style]}>
+    <Animated.View style={[style, animatedStyle]}>
       <GestureDetector gesture={gestureHandler}>
         {headerContent}
       </GestureDetector>

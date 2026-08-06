@@ -56,8 +56,6 @@ export default function VLibrasPlayer({
         />
       }
       style={[styles.playerContainer]}
-      initialX={50}
-      initialY={50}
     >
       <VLibrasWebPlayerWrapper
         speed={speed}
@@ -104,6 +102,8 @@ const styles = StyleSheet.create({
   playerContainer: {
     zIndex: 1,
     position: 'absolute',
+    top: 50,
+    left: 50,
     width: 210,
     height: 350,
   },

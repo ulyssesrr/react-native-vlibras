@@ -11,12 +11,16 @@ import {
   type Dispatch,
   useEffect,
 } from 'react';
-import { type NativeMethods } from 'react-native';
+import { StyleSheet, View, type NativeMethods } from 'react-native';
 import { VLibrasTooltipPortal } from './VLibrasTooltipPortal';
 import { VLibrasFab } from './VLibrasFab';
 import VLibrasPlayer from './VLibrasPlayer';
 import type { VLibrasSimplePlayerHandle } from './VLibrasWebPlayerWrapper';
-import { GestureDetector, useTapGesture } from 'react-native-gesture-handler';
+import {
+  Gesture,
+  GestureDetector,
+  GestureHandlerRootView,
+} from 'react-native-gesture-handler';
 import { runOnJS } from 'react-native-worklets';
 
 interface AnchorInfo {
@@ -56,7 +60,7 @@ export function useVLibras(): VLibrasContextValue {
 
 export type VLibrasStatus = 'inactive' | 'loading' | 'active';
 
-export function VLibrasProvider({ children }: PropsWithChildren) {
+function VLibrasProviderImpl({ children }: PropsWithChildren) {
   const [translationEnabled, setTranslationEnabled] = useState(false);
   const [state, setState] = useState<VLibrasState | null>(null);
 
@@ -69,8 +73,17 @@ export function VLibrasProvider({ children }: PropsWithChildren) {
       : 'loading'
     : 'inactive';
 
+  const hide = useCallback(() => {
+    setState(null);
+  }, []);
+
   const show = useCallback(
     (anchorRef: RefObject<NativeMethods | null>, onPress: () => void) => {
+      const onPressWithHide = () => {
+        onPress();
+        hide();
+      };
+
       try {
         console.log('SHOW!', anchorRef.current);
         anchorRef.current?.measure((_x, _y, width, height, pageX, pageY) => {
@@ -84,7 +97,7 @@ export function VLibrasProvider({ children }: PropsWithChildren) {
               pageX,
               pageY,
             },
-            onPress,
+            onPress: onPressWithHide,
           });
         });
       } catch (e: unknown) {
@@ -92,12 +105,8 @@ export function VLibrasProvider({ children }: PropsWithChildren) {
         // Anchor not measurable (not on screen yet)
       }
     },
-    []
+    [hide]
   );
-
-  const hide = useCallback(() => {
-    setState(null);
-  }, []);
 
   useEffect(() => {
     if (!translationEnabled) {
@@ -119,10 +128,8 @@ export function VLibrasProvider({ children }: PropsWithChildren) {
     }
   };
 
-  const singleTap = useTapGesture({
-    onFinalize: (event) => {
-      runOnJS(handleTap)(event.x, event.y);
-    },
+  const singleTap = Gesture.Tap().onFinalize((event) => {
+    runOnJS(handleTap)(event.x, event.y);
   });
 
   const translate = useCallback(
@@ -150,7 +157,9 @@ export function VLibrasProvider({ children }: PropsWithChildren) {
 
   return (
     <VLibrasContext.Provider value={contextValue}>
-      <GestureDetector gesture={singleTap}>{children}</GestureDetector>
+      <GestureDetector gesture={singleTap}>
+        <View style={styles.container}>{children}</View>
+      </GestureDetector>
       <VLibrasTooltipPortal state={state} />
       {!translationEnabled && (
         <VLibrasFab
@@ -174,3 +183,17 @@ export function VLibrasProvider({ children }: PropsWithChildren) {
     </VLibrasContext.Provider>
   );
 }
+
+export function VLibrasProvider({ children }: PropsWithChildren) {
+  return (
+    <GestureHandlerRootView>
+      <VLibrasProviderImpl>{children}</VLibrasProviderImpl>
+    </GestureHandlerRootView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+});
