@@ -237,7 +237,6 @@ export function VLibrasWebPlayerWrapper({
   const eventHandler = (name: string, args: any) => {
     if (translateText.current) {
       if (name === 'response:glosa') {
-        console.log(name, args);
         if (Array.isArray(args) && args.length === 2) {
           const index: number = args[0];
           const length: number = args[1];
@@ -258,11 +257,17 @@ export function VLibrasWebPlayerWrapper({
         onAnimationPlay?.(event);
       } else if (isPlaying() && name === 'animation:end') {
         updateStatus(translateText.current, 'idle');
-        const event = {
+        const progressEvent = {
+          text: translateText.current,
+          index: 1,
+          length: 1,
+        };
+        emitter.emit('animationProgress', progressEvent);
+        const endEvent = {
           text: translateText.current,
         };
-        emitter.emit('animationEnd', event);
-        onAnimationEnd?.(event);
+        emitter.emit('animationEnd', endEvent);
+        onAnimationEnd?.(endEvent);
       } else if (isPlaying() && name === 'animation:pause') {
         updateStatus(translateText.current, 'paused');
         const event = {
@@ -278,7 +283,6 @@ export function VLibrasWebPlayerWrapper({
       });
       syncSubtitleState();
     } else if (name === 'custom:canvas:ready') {
-      console.log('custom:canvas:ready');
       syncCanvasToLayout();
     }
   };

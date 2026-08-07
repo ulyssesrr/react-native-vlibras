@@ -33,11 +33,6 @@ export default function VLibrasPlayer({
 
   const localPlayerRef = useRef<VLibrasSimplePlayerHandle>(null);
   const player = localPlayerRef?.current;
-  console.log({
-    playerLoaded,
-    localPlayerRef: localPlayerRef?.current,
-    playerRef: playerRef,
-  });
 
   const mergedRef = useMergedRef<VLibrasSimplePlayerHandle>(
     localPlayerRef,

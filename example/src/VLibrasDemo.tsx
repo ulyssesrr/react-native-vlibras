@@ -6,12 +6,16 @@ import {
   VLibrasTooltipWrapper,
 } from 'react-native-vlibras';
 import { VLibrasButtonWrapper } from '../../src/VLibrasWrapper';
+import DemoTouchable from './DemoTouchable';
+import DemoText from './DemoText';
 
 export default function VLibrasDemo() {
   const { translate, status } = useVLibras();
 
-  const onPress = () => {
-    Alert.alert('PRESSED!');
+  const createOnPress = (text: string) => {
+    return () => {
+      Alert.alert(`PRESSED: ${text}`);
+    };
   };
 
   return (
@@ -19,15 +23,24 @@ export default function VLibrasDemo() {
       <Button title="TESTE" onPress={() => translate('Meus Benefícios')} />
       <Text style={styles.teste}>{status}</Text>
       <Text style={styles.teste}>{status}</Text>
-      <Text style={styles.teste}>{status}</Text>
-      <Text style={styles.teste}>{status}</Text>
       <VLibrasTooltipWrapper content={<Text>Content</Text>}>
         <Text style={styles.teste}>Teste 1 2 3</Text>
       </VLibrasTooltipWrapper>
-      <Text style={styles.teste} {...useVLibrasTextWrapper({ onPress })}>
+      <Text
+        style={styles.teste}
+        {...useVLibrasTextWrapper({ onPress: createOnPress('1') })}
+      >
         Meus Benefícios
       </Text>
-      <VLibrasButtonWrapper title="Meus Benefícios" onPress={onPress} />
+      <VLibrasButtonWrapper
+        title="Meus Benefícios"
+        onPress={createOnPress('2')}
+      />
+      <Text style={styles.teste}>{status}</Text>
+      <Text style={styles.teste}>{status}</Text>
+      <DemoTouchable onPress={createOnPress('3')}>
+        <DemoText text="Meu 1 2 3" />
+      </DemoTouchable>
     </View>
   );
 }

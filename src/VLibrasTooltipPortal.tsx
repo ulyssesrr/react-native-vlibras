@@ -45,7 +45,6 @@ export function VLibrasTooltipPortal({ state }: TooltipPortalProps) {
   // );
 
   if (!state) {
-    console.log('NEW FAIL 1');
     return null;
   }
 

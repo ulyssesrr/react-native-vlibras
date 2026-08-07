@@ -69,7 +69,6 @@ export function VLibrasFab({
   size = FAB_SIZE,
   borderRadius = 8,
 }: VLibrasFabProps) {
-  console.log('style', style);
   return (
     <Pressable
       style={[

@@ -6,3 +6,4 @@ export * from './VLibrasProvider';
 export * from './VLibrasTooltipWrapper';
 export * from './VLibrasTooltipPortal';
 export * from './useVLibrasWrapper';
+export * from './VLibrasTranslateBlockProvider';

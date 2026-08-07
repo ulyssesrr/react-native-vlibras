@@ -71,7 +71,6 @@ export function VLibrasPlayButton({
 
   useEffect(() => {
     const unsubscribe = player.addListener('playerStatusChange', (e) => {
-      console.log('VLibrasPlayButton', 'playerStatusChange', e);
       setPlayerStatus(e.status);
       setLastText(e.text);
     });
