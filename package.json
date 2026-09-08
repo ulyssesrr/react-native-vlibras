@@ -1,6 +1,6 @@
 {
   "name": "react-native-vlibras",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Biblioteca para integração do VLibras em projetos react-native.",
   "main": "./lib/module/index.js",
   "types": "./lib/typescript/src/index.d.ts",
