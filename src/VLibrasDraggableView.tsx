@@ -6,7 +6,7 @@ import Animated, {
   useAnimatedStyle,
 } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import { useWindowDimensions, type ViewProps } from 'react-native';
+import { useWindowDimensions, View, type ViewProps } from 'react-native';
 
 interface DraggableViewProps extends ViewProps {
   headerContent: ReactNode;
@@ -77,7 +77,7 @@ export const VLibrasDraggableView = ({
   return (
     <Animated.View style={[style, animatedStyle]}>
       <GestureDetector gesture={gestureHandler}>
-        {headerContent}
+        <View collapsable={false}>{headerContent}</View>
       </GestureDetector>
       {children}
     </Animated.View>
