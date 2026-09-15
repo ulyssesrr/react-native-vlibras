@@ -1,4 +1,4 @@
-import { View, StyleSheet, Button, Text, Alert } from 'react-native';
+import { View, StyleSheet, Button, Text, Alert, Modal } from 'react-native';
 
 import {
   useVLibras,
@@ -8,15 +8,18 @@ import {
 import { VLibrasButtonWrapper } from '../../src/VLibrasWrapper';
 import DemoTouchable from './DemoTouchable';
 import DemoText from './DemoText';
+import { useState } from 'react';
 
 export default function VLibrasDemo() {
-  const { translate, status } = useVLibras();
+  const { translate, status, fabEnabled, setFabEnabled } = useVLibras();
 
   const createOnPress = (text: string) => {
     return () => {
       Alert.alert(`PRESSED: ${text}`);
     };
   };
+
+  const [modalVisible, setModalVisible] = useState(false);
 
   return (
     <View style={styles.container}>
@@ -41,6 +44,36 @@ export default function VLibrasDemo() {
       <DemoTouchable onPress={createOnPress('3')}>
         <DemoText text="Meu 1 2 3" />
       </DemoTouchable>
+      <Text style={styles.teste}>FAB:</Text>
+      <Button
+        title={`FAB Enabled: ${fabEnabled}`}
+        onPress={() => setFabEnabled((val) => !val)}
+      />
+      <Button
+        title={`FAB Enabled: ${fabEnabled}`}
+        onPress={() => setFabEnabled((val) => !val)}
+      />
+      <Text style={styles.teste}>MODAL:</Text>
+      <DemoTouchable onPress={() => setModalVisible(true)}>
+        <DemoText text="Show Modal" />
+      </DemoTouchable>
+      <Modal
+        animationType="slide"
+        transparent={false}
+        visible={modalVisible}
+        onRequestClose={() => {
+          setModalVisible(!modalVisible);
+        }}
+      >
+        <View style={styles.modalView}>
+          <View style={styles.container}>
+            <Text style={styles.teste}>Olá Mundo!</Text>
+            <DemoTouchable onPress={() => setModalVisible(!modalVisible)}>
+              <DemoText text="Ocultar Modal" />
+            </DemoTouchable>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -55,6 +88,22 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     // Android Shadow property
     elevation: 4,
+  },
+  modalView: {
+    flex: 1,
+    margin: 20,
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 35,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
   },
   playerContainer: {
     zIndex: 1,

@@ -40,6 +40,8 @@ interface VLibrasState {
 interface VLibrasContextValue {
   status: VLibrasStatus;
   setTranslationEnabled: Dispatch<SetStateAction<boolean>>;
+  fabEnabled: boolean;
+  setFabEnabled: Dispatch<SetStateAction<boolean>>;
   show: (
     anchorRef: RefObject<NativeMethods | null>,
     onPress: () => void
@@ -62,6 +64,7 @@ export type VLibrasStatus = 'inactive' | 'loading' | 'active';
 
 function VLibrasProviderImpl({ children }: PropsWithChildren) {
   const [translationEnabled, setTranslationEnabled] = useState(false);
+  const [fabEnabled, setFabEnabled] = useState(true);
   const [state, setState] = useState<VLibrasState | null>(null);
 
   const playerRef = useRef<VLibrasSimplePlayerHandle>(null);
@@ -149,10 +152,12 @@ function VLibrasProviderImpl({ children }: PropsWithChildren) {
       translate,
       translationEnabled,
       setTranslationEnabled,
+      fabEnabled,
+      setFabEnabled,
       show,
       hide,
     }),
-    [status, translate, translationEnabled, show, hide]
+    [status, translate, translationEnabled, fabEnabled, show, hide]
   );
 
   return (
@@ -161,7 +166,7 @@ function VLibrasProviderImpl({ children }: PropsWithChildren) {
         <View style={styles.container}>{children}</View>
       </GestureDetector>
       <VLibrasTooltipPortal state={state} />
-      {!translationEnabled && (
+      {fabEnabled && !translationEnabled && (
         <VLibrasFab
           anchor="right"
           alignment="MIDDLE"
