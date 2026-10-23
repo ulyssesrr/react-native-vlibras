@@ -157,7 +157,9 @@ export function VLibrasPlayerHeader({ onClose }: VLibrasPlayerHeaderProps) {
 
       {/* Center Container (1 child) */}
       <View style={[styles.subContainer, styles.centerAlign]}>
-        <Text style={styles.title}>VLIBRAS</Text>
+        <Text style={styles.title} numberOfLines={1}>
+          VLIBRAS
+        </Text>
       </View>
 
       {/* Right Container (2 children) */}
@@ -180,17 +182,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   subContainer: {
-    flex: 1, // Forces all 3 sections to occupy identical width
     flexDirection: 'row',
     alignItems: 'center',
   },
+  // Laterais com largura fixa (botão de fechar: imagem de 28px + 2 * 4px de
+  // padding) mantêm o título centralizado e deixam o resto do espaço para ele.
   leftAlign: {
+    width: 36,
     justifyContent: 'flex-start',
   },
   centerAlign: {
+    flex: 1,
     justifyContent: 'center',
   },
   rightAlign: {
+    width: 36,
     justifyContent: 'flex-end',
   },
   title: {

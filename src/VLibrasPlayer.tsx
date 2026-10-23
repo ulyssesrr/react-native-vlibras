@@ -1,4 +1,4 @@
-import { View, StyleSheet, Text } from 'react-native';
+import { View, StyleSheet, Text, useWindowDimensions } from 'react-native';
 import { useRef, useState, type Ref } from 'react';
 import {
   VLibrasWebPlayerWrapper,
@@ -22,6 +22,9 @@ export interface VLibrasPlayerProps extends Omit<
   playerRef: Ref<VLibrasSimplePlayerHandle>;
 }
 
+const DEFAULT_PLAYER_WIDTH = 210;
+const DEFAULT_PLAYER_HEIGHT = 350;
+
 export default function VLibrasPlayer({
   playerRef,
   onPlayerStatusChange,
@@ -39,7 +42,10 @@ export default function VLibrasPlayer({
     playerRef
   );
 
-  const { setTranslationEnabled } = useVLibras();
+  const { setTranslationEnabled, playerSize } = useVLibras();
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const effectiveWidth = playerSize?.width ?? DEFAULT_PLAYER_WIDTH;
+  const effectiveHeight = playerSize?.height ?? DEFAULT_PLAYER_HEIGHT;
 
   return (
     <VLibrasDraggableView
@@ -50,7 +56,14 @@ export default function VLibrasPlayer({
           }}
         />
       }
-      style={[styles.playerContainer]}
+      style={[
+        styles.playerContainer,
+        { width: effectiveWidth, height: effectiveHeight },
+      ]}
+      maxWidth={windowWidth - effectiveWidth}
+      maxHeight={windowHeight - effectiveHeight}
+      initialX={50}
+      initialY={50}
     >
       <VLibrasWebPlayerWrapper
         speed={speed}
@@ -97,10 +110,8 @@ const styles = StyleSheet.create({
   playerContainer: {
     zIndex: 1,
     position: 'absolute',
-    top: 50,
-    left: 50,
-    width: 210,
-    height: 350,
+    top: 0,
+    left: 0,
   },
   speedControl: {
     fontWeight: 700,

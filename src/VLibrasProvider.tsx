@@ -11,9 +11,16 @@ import {
   type Dispatch,
   useEffect,
 } from 'react';
-import { StyleSheet, View, type NativeMethods } from 'react-native';
+import {
+  StyleSheet,
+  View,
+  useWindowDimensions,
+  type NativeMethods,
+} from 'react-native';
+import { useSharedValue, type SharedValue } from 'react-native-reanimated';
 import { VLibrasTooltipPortal } from './VLibrasTooltipPortal';
-import { VLibrasFab } from './VLibrasFab';
+import { FAB_SIZE, VLibrasFab } from './VLibrasFab';
+import { VLibrasDraggableView } from './VLibrasDraggableView';
 import VLibrasPlayer from './VLibrasPlayer';
 import type { VLibrasSimplePlayerHandle } from './VLibrasWebPlayerWrapper';
 import {
@@ -37,11 +44,24 @@ interface VLibrasState {
   onPress: () => void;
 }
 
+export interface VLibrasPlayerSize {
+  width: number;
+  height: number;
+}
+
 interface VLibrasContextValue {
   status: VLibrasStatus;
   setTranslationEnabled: Dispatch<SetStateAction<boolean>>;
   fabEnabled: boolean;
   setFabEnabled: Dispatch<SetStateAction<boolean>>;
+  playerSize: VLibrasPlayerSize | undefined;
+  setPlayerSize: Dispatch<SetStateAction<VLibrasPlayerSize | undefined>>;
+  /**
+   * Posição do FAB em uso: a do app (ver `VLibrasProviderProps`) ou a criada
+   * pelo provider.
+   */
+  fabX: SharedValue<number>;
+  fabY: SharedValue<number>;
   show: (
     anchorRef: RefObject<NativeMethods | null>,
     onPress: () => void
@@ -62,10 +82,75 @@ export function useVLibras(): VLibrasContextValue {
 
 export type VLibrasStatus = 'inactive' | 'loading' | 'active';
 
-function VLibrasProviderImpl({ children }: PropsWithChildren) {
+export interface VLibrasProviderProps {
+  /** Permite que o usuário arraste o FAB pela tela. Padrão: `true`. */
+  fabDraggable?: boolean;
+  /**
+   * Posição do FAB controlada pelo app, para definir onde ele começa, movê-lo
+   * ou salvá-la. É o deslocamento, em px, do canto superior esquerdo do FAB
+   * em relação ao canto superior esquerdo do provider (use `FAB_SIZE` para
+   * encostá-lo numa borda); posições fora da tela são ajustadas ao desenhar.
+   * A que o app não informar é criada pelo provider, começando no meio da
+   * borda direita.
+   */
+  fabX?: SharedValue<number>;
+  fabY?: SharedValue<number>;
+}
+
+interface VLibrasDraggableFabProps {
+  onPress: () => void;
+  sharedX: SharedValue<number>;
+  sharedY: SharedValue<number>;
+}
+
+function VLibrasDraggableFab({
+  onPress,
+  sharedX,
+  sharedY,
+}: VLibrasDraggableFabProps) {
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  return (
+    <VLibrasDraggableView
+      headerContent={
+        // O toque vem do gesto de tap da view arrastável, então leitores de
+        // tela precisam de outra forma de ativar o botão.
+        <VLibrasFab
+          accessibilityRole="button"
+          accessibilityLabel="VLibras"
+          accessibilityActions={[{ name: 'activate' }]}
+          onAccessibilityAction={onPress}
+        />
+      }
+      onHeaderPress={onPress}
+      sharedX={sharedX}
+      sharedY={sharedY}
+      style={styles.fabDraggable}
+      minWidth={0}
+      maxWidth={windowWidth - FAB_SIZE}
+      minHeight={0}
+      maxHeight={windowHeight - FAB_SIZE}
+    />
+  );
+}
+
+function VLibrasProviderImpl({
+  children,
+  fabDraggable = true,
+  fabX: externalFabX,
+  fabY: externalFabY,
+}: PropsWithChildren<VLibrasProviderProps>) {
   const [translationEnabled, setTranslationEnabled] = useState(false);
   const [fabEnabled, setFabEnabled] = useState(true);
+  const [playerSize, setPlayerSize] = useState<VLibrasPlayerSize>();
   const [state, setState] = useState<VLibrasState | null>(null);
+
+  // Fica aqui, e não no FAB, para que a posição sobreviva à desmontagem do
+  // FAB enquanto o player está aberto.
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const internalFabX = useSharedValue(windowWidth - FAB_SIZE);
+  const internalFabY = useSharedValue(windowHeight / 2 - FAB_SIZE / 2);
+  const fabX = externalFabX ?? internalFabX;
+  const fabY = externalFabY ?? internalFabY;
 
   const playerRef = useRef<VLibrasSimplePlayerHandle>(null);
   const [playerLoaded, setPlayerLoaded] = useState(false);
@@ -154,11 +239,29 @@ function VLibrasProviderImpl({ children }: PropsWithChildren) {
       setTranslationEnabled,
       fabEnabled,
       setFabEnabled,
+      playerSize,
+      setPlayerSize,
+      fabX,
+      fabY,
       show,
       hide,
     }),
-    [status, translate, translationEnabled, fabEnabled, show, hide]
+    [
+      status,
+      translate,
+      translationEnabled,
+      fabEnabled,
+      playerSize,
+      fabX,
+      fabY,
+      show,
+      hide,
+    ]
   );
+
+  const openPlayer = () => {
+    setTranslationEnabled(true);
+  };
 
   return (
     <VLibrasContext.Provider value={contextValue}>
@@ -166,15 +269,17 @@ function VLibrasProviderImpl({ children }: PropsWithChildren) {
         <View style={styles.container}>{children}</View>
       </GestureDetector>
       <VLibrasTooltipPortal state={state} />
-      {fabEnabled && !translationEnabled && (
-        <VLibrasFab
-          anchor="right"
-          alignment="MIDDLE"
-          onPress={() => {
-            setTranslationEnabled(true);
-          }}
-        />
-      )}
+      {fabEnabled &&
+        !translationEnabled &&
+        (fabDraggable ? (
+          <VLibrasDraggableFab
+            onPress={openPlayer}
+            sharedX={fabX}
+            sharedY={fabY}
+          />
+        ) : (
+          <VLibrasFab style={styles.fabFixed} onPress={openPlayer} />
+        ))}
       {translationEnabled && (
         <VLibrasPlayer
           playerRef={playerRef}
@@ -189,10 +294,13 @@ function VLibrasProviderImpl({ children }: PropsWithChildren) {
   );
 }
 
-export function VLibrasProvider({ children }: PropsWithChildren) {
+export function VLibrasProvider({
+  children,
+  ...props
+}: PropsWithChildren<VLibrasProviderProps>) {
   return (
     <GestureHandlerRootView>
-      <VLibrasProviderImpl>{children}</VLibrasProviderImpl>
+      <VLibrasProviderImpl {...props}>{children}</VLibrasProviderImpl>
     </GestureHandlerRootView>
   );
 }
@@ -200,5 +308,19 @@ export function VLibrasProvider({ children }: PropsWithChildren) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  fabDraggable: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    zIndex: 999,
+    elevation: 999,
+  },
+  fabFixed: {
+    position: 'absolute',
+    right: 0,
+    top: '50%',
+    marginTop: -FAB_SIZE / 2,
+    zIndex: 1,
   },
 });

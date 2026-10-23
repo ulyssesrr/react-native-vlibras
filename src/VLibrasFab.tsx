@@ -4,80 +4,36 @@ import {
   StyleSheet,
   type ImageStyle,
   type PressableProps,
-  type ViewStyle,
 } from 'react-native';
-
-export type VLibrasFabAnchor = 'top' | 'bottom' | 'left' | 'right';
-
-export type VLibrasFabAlignment = 'START' | 'MIDDLE' | 'END';
 
 export interface VLibrasFabProps extends PressableProps {
   onPress?: () => void;
-  anchor?: VLibrasFabAnchor;
-  alignment?: VLibrasFabAlignment;
-  draggable?: boolean;
   size?: number;
   borderRadius?: ImageStyle['borderRadius'];
 }
 
 export const VLIBRAS_ICON = require('./assets/libras.png');
 
-const FAB_SIZE = 56;
+export const FAB_SIZE = 56;
 
-function resolveContainerStyle(
-  size: number,
-  anchor: VLibrasFabAnchor,
-  alignment: VLibrasFabAlignment
-): ViewStyle {
-  const base: ViewStyle = {
-    position: 'absolute',
-    width: size,
-    height: size,
-    zIndex: 1,
-  };
-
-  if (anchor === 'left' || anchor === 'right') {
-    base[anchor] = 0;
-    if (alignment === 'START') {
-      base.top = 0;
-    } else if (alignment === 'END') {
-      base.bottom = 0;
-    } else {
-      base.top = '50%';
-      base.marginTop = -FAB_SIZE / 2;
-    }
-  } else {
-    base[anchor] = 0;
-    if (alignment === 'START') {
-      base.left = 0;
-    } else if (alignment === 'END') {
-      base.right = 0;
-    } else {
-      base.left = '50%';
-      base.marginLeft = -FAB_SIZE / 2;
-    }
-  }
-
-  return base;
-}
-
+/**
+ * Botão do VLibras apenas visual, sem estilos de posicionamento: quem o
+ * renderiza é responsável por posicioná-lo.
+ */
 export function VLibrasFab({
-  onPress,
   style,
-  anchor = 'right',
-  alignment = 'END',
   size = FAB_SIZE,
   borderRadius = 8,
+  ...props
 }: VLibrasFabProps) {
   return (
     <Pressable
-      style={[
-        resolveContainerStyle(size, anchor, alignment),
-        { borderRadius },
+      style={(state) => [
         styles.fab,
-        { ...style },
+        { width: size, height: size, borderRadius },
+        typeof style === 'function' ? style(state) : style,
       ]}
-      onPress={onPress}
+      {...props}
     >
       <Image
         source={VLIBRAS_ICON}
