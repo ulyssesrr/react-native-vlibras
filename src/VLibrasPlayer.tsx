@@ -42,7 +42,7 @@ export default function VLibrasPlayer({
     playerRef
   );
 
-  const { setTranslationEnabled, playerSize } = useVLibras();
+  const { setTranslationEnabled, playerSize, dragInsets } = useVLibras();
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const effectiveWidth = playerSize?.width ?? DEFAULT_PLAYER_WIDTH;
   const effectiveHeight = playerSize?.height ?? DEFAULT_PLAYER_HEIGHT;
@@ -60,10 +60,12 @@ export default function VLibrasPlayer({
         styles.playerContainer,
         { width: effectiveWidth, height: effectiveHeight },
       ]}
-      maxWidth={windowWidth - effectiveWidth}
-      maxHeight={windowHeight - effectiveHeight}
-      initialX={50}
-      initialY={50}
+      minWidth={dragInsets.left}
+      maxWidth={windowWidth - effectiveWidth - dragInsets.right}
+      minHeight={dragInsets.top}
+      maxHeight={windowHeight - effectiveHeight - dragInsets.bottom}
+      initialX={Math.max(50, dragInsets.left)}
+      initialY={Math.max(50, dragInsets.top)}
     >
       <VLibrasWebPlayerWrapper
         speed={speed}

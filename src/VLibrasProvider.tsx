@@ -49,6 +49,13 @@ export interface VLibrasPlayerSize {
   height: number;
 }
 
+export interface VLibrasDragInsets {
+  top?: number;
+  bottom?: number;
+  left?: number;
+  right?: number;
+}
+
 interface VLibrasContextValue {
   status: VLibrasStatus;
   setTranslationEnabled: Dispatch<SetStateAction<boolean>>;
@@ -62,6 +69,8 @@ interface VLibrasContextValue {
    */
   fabX: SharedValue<number>;
   fabY: SharedValue<number>;
+  /** Margens de arrasto já normalizadas (ver `VLibrasProviderProps`). */
+  dragInsets: Required<VLibrasDragInsets>;
   show: (
     anchorRef: RefObject<NativeMethods | null>,
     onPress: () => void
@@ -95,18 +104,27 @@ export interface VLibrasProviderProps {
    */
   fabX?: SharedValue<number>;
   fabY?: SharedValue<number>;
+  /**
+   * Margens, em px, que o FAB e o player não podem invadir ao serem
+   * arrastados (status bar, barra de navegação, tab bar do app etc.).
+   * Padrão: sem margem. Normalmente preenchido pelo app com a safe area
+   * (e, se quiser, a altura da tab bar).
+   */
+  dragInsets?: VLibrasDragInsets;
 }
 
 interface VLibrasDraggableFabProps {
   onPress: () => void;
   sharedX: SharedValue<number>;
   sharedY: SharedValue<number>;
+  insets: Required<VLibrasDragInsets>;
 }
 
 function VLibrasDraggableFab({
   onPress,
   sharedX,
   sharedY,
+  insets,
 }: VLibrasDraggableFabProps) {
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   return (
@@ -125,10 +143,10 @@ function VLibrasDraggableFab({
       sharedX={sharedX}
       sharedY={sharedY}
       style={styles.fabDraggable}
-      minWidth={0}
-      maxWidth={windowWidth - FAB_SIZE}
-      minHeight={0}
-      maxHeight={windowHeight - FAB_SIZE}
+      minWidth={insets.left}
+      maxWidth={windowWidth - FAB_SIZE - insets.right}
+      minHeight={insets.top}
+      maxHeight={windowHeight - FAB_SIZE - insets.bottom}
     />
   );
 }
@@ -138,11 +156,22 @@ function VLibrasProviderImpl({
   fabDraggable = true,
   fabX: externalFabX,
   fabY: externalFabY,
+  dragInsets,
 }: PropsWithChildren<VLibrasProviderProps>) {
   const [translationEnabled, setTranslationEnabled] = useState(false);
   const [fabEnabled, setFabEnabled] = useState(true);
   const [playerSize, setPlayerSize] = useState<VLibrasPlayerSize>();
   const [state, setState] = useState<VLibrasState | null>(null);
+
+  const insets: Required<VLibrasDragInsets> = useMemo(
+    () => ({
+      top: dragInsets?.top ?? 0,
+      bottom: dragInsets?.bottom ?? 0,
+      left: dragInsets?.left ?? 0,
+      right: dragInsets?.right ?? 0,
+    }),
+    [dragInsets?.top, dragInsets?.bottom, dragInsets?.left, dragInsets?.right]
+  );
 
   // Fica aqui, e não no FAB, para que a posição sobreviva à desmontagem do
   // FAB enquanto o player está aberto.
@@ -243,6 +272,7 @@ function VLibrasProviderImpl({
       setPlayerSize,
       fabX,
       fabY,
+      dragInsets: insets,
       show,
       hide,
     }),
@@ -254,6 +284,7 @@ function VLibrasProviderImpl({
       playerSize,
       fabX,
       fabY,
+      insets,
       show,
       hide,
     ]
@@ -276,6 +307,7 @@ function VLibrasProviderImpl({
             onPress={openPlayer}
             sharedX={fabX}
             sharedY={fabY}
+            insets={insets}
           />
         ) : (
           <VLibrasFab style={styles.fabFixed} onPress={openPlayer} />
