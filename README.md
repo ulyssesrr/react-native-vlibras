@@ -1,6 +1,17 @@
 # react-native-vlibras
 
-Biblioteca para integração do VLibras em projetos react-native.
+[![versão no npm](https://img.shields.io/npm/v/react-native-vlibras)](https://www.npmjs.com/package/react-native-vlibras)
+[![licença MIT](https://img.shields.io/npm/l/react-native-vlibras)](LICENSE)
+
+Tradução para Libras em apps React Native com o [VLibras](https://www.gov.br/governodigital/pt-br/vlibras), um conjunto de ferramentas gratuitas e de código aberto que traduz conteúdos digitais em Português para Libras, desenvolvido pelo governo federal em parceria com a UFPB.
+
+A biblioteca adiciona ao app um botão flutuante do VLibras. Quando o usuário toca nele, abre um player com o avatar do VLibras. A partir daí, tocar num texto ou botão que o app marcou como traduzível mostra a tradução em Libras. Nos botões, a ação original fica num balão e só é executada se o usuário tocar nele, para que pedir a tradução não dispare a ação sem querer.
+
+Funciona em Android e iOS, com a Nova Arquitetura do React Native.
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/ulyssesrr/react-native-vlibras/main/docs/demo.gif" width="320" alt="Demonstração: o usuário toca no botão do VLibras, o player abre com o avatar, é arrastado para o canto da tela, e o avatar traduz para Libras o texto e o cartão tocados; no cartão, a ação fica num balão.">
+</p>
 
 ## Instalação
 
