@@ -1,136 +1,140 @@
-# Contributing
+# Como contribuir
 
-Contributions are always welcome, no matter how large or small!
+Contribuições são sempre bem-vindas, de qualquer tamanho!
 
-We want this community to be friendly and respectful to each other. Please follow it in all your interactions with the project. Before contributing, please read the [code of conduct](./CODE_OF_CONDUCT.md).
+Queremos que esta comunidade seja acolhedora e respeitosa. Antes de contribuir, leia o [código de conduta](./CODE_OF_CONDUCT.md) (em inglês) e siga-o em todas as interações com o projeto.
 
-## Development workflow
+## Fluxo de desenvolvimento
 
-This project is a monorepo managed using [Yarn workspaces](https://yarnpkg.com/features/workspaces). It contains the following packages:
+Este projeto é um monorepo gerenciado com [Yarn workspaces](https://yarnpkg.com/features/workspaces). Ele tem dois pacotes:
 
-- The library package in the root directory.
-- An example app in the `example/` directory.
+- a biblioteca, na raiz;
+- um app de exemplo, na pasta `example/`.
 
-To get started with the project, make sure you have the correct version of [Node.js](https://nodejs.org/) installed. See the [`.nvmrc`](./.nvmrc) file for the version used in this project.
+As versões de Node.js, Yarn e Java usadas no projeto estão no [`mise.toml`](./mise.toml). Com o [mise](https://mise.jdx.dev/) instalado, instale todas com:
 
-Run `yarn` in the root directory to install the required dependencies for each package:
+```sh
+mise install
+```
+
+Depois, rode `yarn` na raiz para instalar as dependências de todos os pacotes:
 
 ```sh
 yarn
 ```
 
-> Since the project relies on Yarn workspaces, you cannot use [`npm`](https://github.com/npm/cli) for development without manually migrating.
+> Como o projeto usa Yarn workspaces, não dá para usar o [`npm`](https://github.com/npm/cli) no desenvolvimento sem migrar o projeto manualmente.
 
-The [example app](/example/) demonstrates usage of the library. You need to run it to test any changes you make.
+O [app de exemplo](/example/) mostra a biblioteca em uso, e você precisa rodá-lo para testar suas mudanças. Ele usa a versão local da biblioteca: mudanças no código JavaScript aparecem no app sem recompilar, mas mudanças em código nativo exigem recompilar o app.
 
-It is configured to use the local version of the library, so any changes you make to the library's source code will be reflected in the example app. Changes to the library's JavaScript code will be reflected in the example app without a rebuild, but native code changes will require a rebuild of the example app.
+O app de exemplo tem duas telas, escolhidas pela constante `SCREEN` em [`example/src/App.tsx`](/example/src/App.tsx): a vitrine (`'vitrine'`), que é a tela gravada no GIF do README, e a bancada de testes (`'testes'`).
 
-You can use various commands from the root directory to work with the project.
+Os comandos abaixo são rodados na raiz do projeto.
 
-To start the packager:
+Para iniciar o Metro:
 
 ```sh
 yarn example start
 ```
 
-To run the example app on Android:
+Para rodar o app de exemplo no Android:
 
 ```sh
 yarn example android
 ```
 
-To run the example app on iOS:
+Para rodar o app de exemplo no iOS:
 
 ```sh
 yarn example ios
 ```
 
-To confirm that the app is running with the new architecture, you can check the Metro logs for a message like this:
+Para confirmar que o app está rodando na Nova Arquitetura, procure nos logs do Metro uma mensagem como esta:
 
 ```sh
 Running "VlibrasExample" with {"fabric":true,"initialProps":{"concurrentRoot":true},"rootTag":1}
 ```
 
-Note the `"fabric":true` and `"concurrentRoot":true` properties.
+Ela deve ter `"fabric":true` e `"concurrentRoot":true`.
 
-To run the example app on Web:
+Para rodar o app de exemplo na web:
 
 ```sh
 yarn example web
 ```
 
-Make sure your code passes TypeScript:
+Confira se o código passa no TypeScript:
 
 ```sh
 yarn typecheck
 ```
 
-To check for linting errors, run the following:
+Para procurar erros de lint:
 
 ```sh
 yarn lint
 ```
 
-To fix formatting errors, run the following:
+Para corrigir erros de formatação:
 
 ```sh
 yarn lint --fix
 ```
 
-Remember to add tests for your change if possible. Run the unit tests by:
+Se possível, adicione testes para a sua mudança. Para rodar os testes unitários:
 
 ```sh
 yarn test
 ```
 
+### Convenção de commits
 
-### Commit message convention
+As mensagens de commit seguem a especificação [Conventional Commits](https://www.conventionalcommits.org/pt-br):
 
-We follow the [conventional commits specification](https://www.conventionalcommits.org/en) for our commit messages:
+- `fix`: correção de bug, como um crash causado por um método obsoleto.
+- `feat`: funcionalidade nova, como um método novo no módulo.
+- `refactor`: refatoração, como trocar componentes de classe por hooks.
+- `docs`: mudança na documentação, como um exemplo de uso novo.
+- `test`: testes novos ou atualizados.
+- `chore`: mudança nas ferramentas, como na configuração do CI.
 
-- `fix`: bug fixes, e.g. fix crash due to deprecated method.
-- `feat`: new features, e.g. add new method to the module.
-- `refactor`: code refactor, e.g. migrate from class components to hooks.
-- `docs`: changes into documentation, e.g. add usage example for the module.
-- `test`: adding or updating tests, e.g. add integration tests using detox.
-- `chore`: tooling changes, e.g. change CI config.
+Escreva as mensagens de commit e os comentários no código em português.
 
-Our pre-commit hooks verify that your commit message matches this format when committing.
+A cada commit, os hooks do [lefthook](https://lefthook.dev/) rodam o lint e o typecheck dos arquivos alterados e conferem o formato da mensagem.
 
+### Publicando no npm
 
-### Publishing to npm
+Usamos o [release-it](https://github.com/release-it/release-it) para publicar novas versões. Ele cuida das tarefas comuns, como definir a versão pelo semver e criar a tag e a release.
 
-We use [release-it](https://github.com/release-it/release-it) to make it easier to publish new versions. It handles common tasks like bumping version based on semver, creating tags and releases etc.
-
-To publish new versions, run the following:
+Para publicar uma nova versão:
 
 ```sh
 yarn release
 ```
 
-
 ### Scripts
 
-The `package.json` file contains various scripts for common tasks:
+O `package.json` tem scripts para as tarefas comuns:
 
-- `yarn`: setup project by installing dependencies.
-- `yarn typecheck`: type-check files with TypeScript.
-  - `yarn lint`: lint files with [ESLint](https://eslint.org/).
-    - `yarn test`: run unit tests with [Jest](https://jestjs.io/).
-  - `yarn example start`: start the Metro server for the example app.
-- `yarn example android`: run the example app on Android.
-- `yarn example ios`: run the example app on iOS.
-  - `yarn example web`: run the example app on Web.
-- `yarn example build:web`: build the example app for Web.
-  
-### Sending a pull request
+- `yarn`: instala as dependências do projeto.
+- `yarn typecheck`: verifica os tipos com o TypeScript.
+- `yarn lint`: verifica o código com o [ESLint](https://eslint.org/).
+- `yarn test`: roda os testes unitários com o [Jest](https://jestjs.io/).
+- `yarn clean`: apaga as pastas de build da biblioteca e do app de exemplo.
+- `yarn release`: publica uma nova versão.
+- `yarn example start`: inicia o Metro do app de exemplo.
+- `yarn example android`: roda o app de exemplo no Android.
+- `yarn example ios`: roda o app de exemplo no iOS.
+- `yarn example web`: roda o app de exemplo na web.
+- `yarn example build:web`: gera o build web do app de exemplo.
 
-> **Working on your first pull request?** You can learn how from this _free_ series: [How to Contribute to an Open Source Project on GitHub](https://app.egghead.io/playlists/how-to-contribute-to-an-open-source-project-on-github).
+### Enviando um pull request
 
-When you're sending a pull request:
+> **É o seu primeiro pull request?** Você pode aprender com esta série gratuita (em inglês): [How to Contribute to an Open Source Project on GitHub](https://app.egghead.io/playlists/how-to-contribute-to-an-open-source-project-on-github).
 
-- Prefer small pull requests focused on one change.
-- Verify that linters and tests are passing.
-- Review the documentation to make sure it looks good.
-- Follow the pull request template when opening a pull request.
-- For pull requests that change the API or implementation, discuss with maintainers first by opening an issue.
+Ao enviar um pull request:
+
+- Prefira pull requests pequenos, focados numa única mudança.
+- Confira se o lint, o typecheck e os testes passam.
+- Revise a documentação afetada pela mudança.
+- Para mudanças na API ou na implementação, abra antes uma issue para discutir com os mantenedores.
