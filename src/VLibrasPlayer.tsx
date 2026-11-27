@@ -1,11 +1,14 @@
-import { View, StyleSheet, Text, useWindowDimensions } from 'react-native';
+import { View, StyleSheet, Text } from 'react-native';
 import { useRef, useState, type Ref } from 'react';
 import {
   VLibrasWebPlayerWrapper,
   type VLibrasSimplePlayerHandle,
   type VLibrasWebPlayerWrapperProps,
 } from './VLibrasWebPlayerWrapper';
-import { VLibrasDraggableView } from './VLibrasDraggableView';
+import {
+  VLibrasDraggableView,
+  type VLibrasDragInsets,
+} from './VLibrasDraggableView';
 import {
   VLibrasPlayButton,
   VLibrasPlayerHeader,
@@ -20,13 +23,18 @@ export interface VLibrasPlayerProps extends Omit<
   'speed' | 'showSubtitles'
 > {
   playerRef: Ref<VLibrasSimplePlayerHandle>;
+  /** Margens de arrasto já normalizadas pelo provider. */
+  insets: Required<VLibrasDragInsets>;
 }
 
 const DEFAULT_PLAYER_WIDTH = 210;
 const DEFAULT_PLAYER_HEIGHT = 350;
+/** Distância, em px, entre o player recém-aberto e as margens de arrasto. */
+const PLAYER_INITIAL_OFFSET = 50;
 
 export default function VLibrasPlayer({
   playerRef,
+  insets,
   onPlayerStatusChange,
   ...props
 }: VLibrasPlayerProps) {
@@ -43,7 +51,6 @@ export default function VLibrasPlayer({
   );
 
   const { setTranslationEnabled, playerSize } = useVLibras();
-  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const effectiveWidth = playerSize?.width ?? DEFAULT_PLAYER_WIDTH;
   const effectiveHeight = playerSize?.height ?? DEFAULT_PLAYER_HEIGHT;
 
@@ -60,10 +67,11 @@ export default function VLibrasPlayer({
         styles.playerContainer,
         { width: effectiveWidth, height: effectiveHeight },
       ]}
-      maxWidth={windowWidth - effectiveWidth}
-      maxHeight={windowHeight - effectiveHeight}
-      initialX={50}
-      initialY={50}
+      width={effectiveWidth}
+      height={effectiveHeight}
+      insets={insets}
+      initialX={insets.left + PLAYER_INITIAL_OFFSET}
+      initialY={insets.top + PLAYER_INITIAL_OFFSET}
     >
       <VLibrasWebPlayerWrapper
         speed={speed}

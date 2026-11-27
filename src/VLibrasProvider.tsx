@@ -20,7 +20,10 @@ import {
 import { useSharedValue, type SharedValue } from 'react-native-reanimated';
 import { VLibrasTooltipPortal } from './VLibrasTooltipPortal';
 import { FAB_SIZE, VLibrasFab } from './VLibrasFab';
-import { VLibrasDraggableView } from './VLibrasDraggableView';
+import {
+  VLibrasDraggableView,
+  type VLibrasDragInsets,
+} from './VLibrasDraggableView';
 import VLibrasPlayer from './VLibrasPlayer';
 import type { VLibrasSimplePlayerHandle } from './VLibrasWebPlayerWrapper';
 import {
@@ -48,6 +51,8 @@ export interface VLibrasPlayerSize {
   width: number;
   height: number;
 }
+
+export type { VLibrasDragInsets } from './VLibrasDraggableView';
 
 interface VLibrasContextValue {
   status: VLibrasStatus;
@@ -89,26 +94,56 @@ export interface VLibrasProviderProps {
    * Posição do FAB controlada pelo app, para definir onde ele começa, movê-lo
    * ou salvá-la. É o deslocamento, em px, do canto superior esquerdo do FAB
    * em relação ao canto superior esquerdo do provider (use `FAB_SIZE` para
-   * encostá-lo numa borda); posições fora da tela são ajustadas ao desenhar.
-   * A que o app não informar é criada pelo provider, começando no meio da
-   * borda direita.
+   * encostá-lo numa borda). Posições fora da tela ou dentro de `dragInsets`
+   * são ajustadas ao desenhar; o valor guardado só é corrigido no próximo
+   * arrasto. A que o app não informar é criada pelo provider, começando no
+   * meio da borda direita, dentro de `dragInsets`.
    */
   fabX?: SharedValue<number>;
   fabY?: SharedValue<number>;
+  /**
+   * Margens, em px, que o FAB e o player não podem invadir (status bar, barra
+   * de navegação, tab bar do app etc.). Valem para qualquer posição, inclusive
+   * a definida pelo app em `fabX`/`fabY`, e também para o FAB fixo
+   * (`fabDraggable={false}`). Normalmente preenchido pelo app com a safe area
+   * (e, se quiser, a altura da tab bar). Padrão: sem margem; valores
+   * negativos ou inválidos contam como `0`.
+   *
+   * As margens são medidas a partir das bordas da janela, então o provider
+   * deve ocupar a janela inteira: para respeitar a safe area, passe-a aqui em
+   * vez de colocar o provider dentro de uma `SafeAreaView`. Se o FAB ou o
+   * player não couber entre as margens, ele fica encostado na margem superior
+   * (ou esquerda).
+   */
+  dragInsets?: VLibrasDragInsets;
 }
 
 interface VLibrasDraggableFabProps {
   onPress: () => void;
   sharedX: SharedValue<number>;
   sharedY: SharedValue<number>;
+  insets: Required<VLibrasDragInsets>;
+}
+
+/** Valores ausentes, negativos ou não finitos (ex.: `NaN`) viram `0`. */
+function normalizeInset(value: number | undefined): number {
+  return value !== undefined && Number.isFinite(value) && value > 0 ? value : 0;
+}
+
+/**
+ * Deslocamento, a partir do meio da tela, do topo do FAB centralizado
+ * verticalmente entre as margens.
+ */
+function fabCenteredOffset(insets: Required<VLibrasDragInsets>): number {
+  return (insets.top - insets.bottom - FAB_SIZE) / 2;
 }
 
 function VLibrasDraggableFab({
   onPress,
   sharedX,
   sharedY,
+  insets,
 }: VLibrasDraggableFabProps) {
-  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   return (
     <VLibrasDraggableView
       headerContent={
@@ -125,10 +160,9 @@ function VLibrasDraggableFab({
       sharedX={sharedX}
       sharedY={sharedY}
       style={styles.fabDraggable}
-      minWidth={0}
-      maxWidth={windowWidth - FAB_SIZE}
-      minHeight={0}
-      maxHeight={windowHeight - FAB_SIZE}
+      width={FAB_SIZE}
+      height={FAB_SIZE}
+      insets={insets}
     />
   );
 }
@@ -138,17 +172,30 @@ function VLibrasProviderImpl({
   fabDraggable = true,
   fabX: externalFabX,
   fabY: externalFabY,
+  dragInsets,
 }: PropsWithChildren<VLibrasProviderProps>) {
   const [translationEnabled, setTranslationEnabled] = useState(false);
   const [fabEnabled, setFabEnabled] = useState(true);
   const [playerSize, setPlayerSize] = useState<VLibrasPlayerSize>();
   const [state, setState] = useState<VLibrasState | null>(null);
 
+  const insets: Required<VLibrasDragInsets> = useMemo(
+    () => ({
+      top: normalizeInset(dragInsets?.top),
+      bottom: normalizeInset(dragInsets?.bottom),
+      left: normalizeInset(dragInsets?.left),
+      right: normalizeInset(dragInsets?.right),
+    }),
+    [dragInsets?.top, dragInsets?.bottom, dragInsets?.left, dragInsets?.right]
+  );
+
   // Fica aqui, e não no FAB, para que a posição sobreviva à desmontagem do
   // FAB enquanto o player está aberto.
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
-  const internalFabX = useSharedValue(windowWidth - FAB_SIZE);
-  const internalFabY = useSharedValue(windowHeight / 2 - FAB_SIZE / 2);
+  const internalFabX = useSharedValue(windowWidth - FAB_SIZE - insets.right);
+  const internalFabY = useSharedValue(
+    windowHeight / 2 + fabCenteredOffset(insets)
+  );
   const fabX = externalFabX ?? internalFabX;
   const fabY = externalFabY ?? internalFabY;
 
@@ -276,13 +323,21 @@ function VLibrasProviderImpl({
             onPress={openPlayer}
             sharedX={fabX}
             sharedY={fabY}
+            insets={insets}
           />
         ) : (
-          <VLibrasFab style={styles.fabFixed} onPress={openPlayer} />
+          <VLibrasFab
+            style={[
+              styles.fabFixed,
+              { right: insets.right, marginTop: fabCenteredOffset(insets) },
+            ]}
+            onPress={openPlayer}
+          />
         ))}
       {translationEnabled && (
         <VLibrasPlayer
           playerRef={playerRef}
+          insets={insets}
           onPlayerStatusChange={(e) => {
             if (e.status !== 'loading') {
               setPlayerLoaded(true);
@@ -316,11 +371,10 @@ const styles = StyleSheet.create({
     zIndex: 999,
     elevation: 999,
   },
+  // `right` e `marginTop` dependem de `dragInsets` e são definidos no render.
   fabFixed: {
     position: 'absolute',
-    right: 0,
     top: '50%',
-    marginTop: -FAB_SIZE / 2,
     zIndex: 1,
   },
 });
